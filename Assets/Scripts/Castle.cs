@@ -1,15 +1,26 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
+using TMPro;
 
 public class Castle : MonoBehaviour
 {
+    public Country country;
+    public TMP_Text countryLabel;
+    public SpriteRenderer countryFlag;
+
     public int maxHealth = 10000;
     public int currentHealth;
 
     void Start()
     {
         currentHealth = maxHealth;
+    }
+
+    public void SetCountry(Country newCountry)
+    {
+        country = newCountry;
+        countryLabel.text = country.countryName;
+        countryFlag.sprite = country.flag;
     }
 
     public void TakeDamage(int damage)
