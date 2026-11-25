@@ -16,12 +16,10 @@ public class Castle : MonoBehaviour
 
     void Start()
     {
-        currentHealth = maxHealth;
-        healthBar.maxValue = maxHealth;
-
-        UpdateHealthUI();
+        ResetCastle();
     }
 
+    // Land zuweisen
     public void SetCountry(Country newCountry)
     {
         country = newCountry;
@@ -29,9 +27,14 @@ public class Castle : MonoBehaviour
         countryFlag.sprite = country.flag;
     }
 
+    // Schaden erhalten
     public void TakeDamage(int damage)
     {
-        currentHealth = Mathf.Max(0, currentHealth - damage);
+        if (currentHealth <= 0)
+            return;
+
+        currentHealth = Mathf.Max(
+            0, currentHealth - damage);
 
         UpdateHealthUI();
 
@@ -41,15 +44,31 @@ public class Castle : MonoBehaviour
         }
     }
 
+    // Lebensanzeige aktualisieren
     private void UpdateHealthUI()
     {
         healthBar.value = currentHealth;
-        healthText.text = currentHealth + " / " + maxHealth + " HP";
+
+        healthText.text =
+            currentHealth + " / " + maxHealth + " HP";
     }
 
+    // Burg zerstören
     private void DestroyCastle()
     {
         Debug.Log(gameObject.name + " wurde zerstört!");
         gameObject.SetActive(false);
+    }
+
+    // Burg für die nächste Runde zurücksetzen
+    public void ResetCastle()
+    {
+        currentHealth = maxHealth;
+
+        gameObject.SetActive(true);
+
+        healthBar.maxValue = maxHealth;
+
+        UpdateHealthUI();
     }
 }

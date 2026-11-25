@@ -12,6 +12,11 @@ public class Soldier : MonoBehaviour
     public float attackInterval = 1f;
     public float detectionRange = 5f;
 
+    // Soldatenabstand
+    public float separationRadius = 0.8f;
+    public float separationStrength = 3f;
+    public LayerMask soldierLayer;
+
     public Castle ownCastle;
     public Castle targetCastle;
     public Soldier targetSoldier;
@@ -29,33 +34,33 @@ public class Soldier : MonoBehaviour
         if (ownCastle == null || currentHealth <= 0)
             return;
 
-        // Regelmäßig nach gegnerischen Soldaten suchen
         if (Time.time >= nextSearchTime)
         {
             FindEnemySoldier();
             nextSearchTime = Time.time + 0.5f;
         }
 
-        // Gegnerische Soldaten haben Vorrang
         if (targetSoldier != null &&
             targetSoldier.currentHealth > 0)
         {
             MoveAndAttack(targetSoldier.transform);
-            return;
+        }
+        else
+        {
+            if (targetCastle == null ||
+                targetCastle == ownCastle ||
+                !targetCastle.gameObject.activeInHierarchy)
+            {
+                FindTargetCastle();
+            }
+
+            if (targetCastle != null)
+            {
+                MoveAndAttack(targetCastle.transform);
+            }
         }
 
-        // Gegnerische Burg suchen
-        if (targetCastle == null ||
-            targetCastle == ownCastle ||
-            !targetCastle.gameObject.activeInHierarchy)
-        {
-            FindTargetCastle();
-        }
-
-        if (targetCastle != null)
-        {
-            MoveAndAttack(targetCastle.transform);
-        }
+        ApplySeparation();
     }
 
     // Gegnerische Soldaten suchen
@@ -142,6 +147,48 @@ public class Soldier : MonoBehaviour
         {
             Attack();
         }
+    }
+
+    // Abstand zu anderen Soldaten halten
+    private void ApplySeparation()
+    {
+        Collider[] nearbySoldiers = Physics.OverlapSphere(
+            transform.position,
+            separationRadius,
+            soldierLayer);
+
+        Vector3 separation = Vector3.zero;
+
+        foreach (Collider nearby in nearbySoldiers)
+        {
+            if (nearby.gameObject == gameObject)
+                continue;
+
+            Vector3 direction =
+                transform.position - nearby.transform.position;
+
+            direction.y = 0f;
+
+            float distance = direction.magnitude;
+
+            if (distance < 0.001f)
+            {
+                direction = Random.insideUnitSphere;
+                direction.y = 0f;
+                distance = 0f;
+            }
+
+            if (distance < separationRadius)
+            {
+                separation += direction.normalized *
+                    (1f - distance / separationRadius);
+            }
+        }
+
+        separation = Vector3.ClampMagnitude(separation, 1f);
+
+        transform.position += separation *
+            separationStrength * Time.deltaTime;
     }
 
     // Gegner angreifen

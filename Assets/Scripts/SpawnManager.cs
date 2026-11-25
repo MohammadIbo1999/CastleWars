@@ -6,10 +6,58 @@ public class SpawnManager : MonoBehaviour
     public Soldier soldierPrefab;
     public Castle[] castles;
 
+    // Automatische Soldatenerzeugung
+    public bool autoSpawn = true;
+    public float spawnInterval = 5f;
+    public int maxSoldiersPerTeam = 100;
+
+    private float spawnTimer = 0f;
+
+    void Update()
+    {
+        // Automatische Erzeugung
+        if (autoSpawn)
+        {
+            spawnTimer += Time.deltaTime;
+
+            if (spawnTimer >= spawnInterval)
+            {
+                SpawnAllTeams();
+                spawnTimer = 0f;
+            }
+        }
+
+        // Manuelle Erzeugung zum Testen
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            SpawnSoldier(castles[0]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            SpawnSoldier(castles[1]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+            SpawnSoldier(castles[2]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+            SpawnSoldier(castles[3]);
+    }
+
+    // Soldaten für alle aktiven Teams erzeugen
+    private void SpawnAllTeams()
+    {
+        foreach (Castle castle in castles)
+        {
+            SpawnSoldier(castle);
+        }
+    }
+
+    // Einzelnen Soldaten erzeugen
     public void SpawnSoldier(Castle castle)
     {
         if (castle == null ||
             !castle.gameObject.activeInHierarchy)
+            return;
+
+        if (CountSoldiers(castle) >= maxSoldiersPerTeam)
             return;
 
         Transform spawnPoint =
@@ -36,19 +84,27 @@ public class SpawnManager : MonoBehaviour
             castle.GetComponent<Renderer>().sharedMaterial;
     }
 
-    void Update()
+    // Lebende Soldaten eines Teams zählen
+    private int CountSoldiers(Castle castle)
     {
-        // Tastatursteuerung zum Testen
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-            SpawnSoldier(castles[0]);
+        int count = 0;
 
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-            SpawnSoldier(castles[1]);
+        Soldier[] soldiers = FindObjectsOfType<Soldier>();
 
-        if (Input.GetKeyDown(KeyCode.Alpha3))
-            SpawnSoldier(castles[2]);
+        foreach (Soldier soldier in soldiers)
+        {
+            if (soldier.ownCastle == castle &&
+                soldier.currentHealth > 0)
+            {
+                count++;
+            }
+        }
 
-        if (Input.GetKeyDown(KeyCode.Alpha4))
-            SpawnSoldier(castles[3]);
+        return count;
+    }
+
+    public void ResetSpawnTimer()
+    {
+        spawnTimer = 0f;
     }
 }

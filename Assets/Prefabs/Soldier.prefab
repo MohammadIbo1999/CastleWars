@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7391682339346742469}
   - component: {fileID: 6842381434301570170}
   - component: {fileID: 912823854135033148}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Soldier
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -113,9 +113,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 100
   currentHealth: 0
-  attackDamage: 20
+  attackDamage: 22
   moveSpeed: 3
   attackRange: 1.5
   attackInterval: 1
+  detectionRange: 5
+  separationRadius: 0.8
+  separationStrength: 3
+  soldierLayer:
+    serializedVersion: 2
+    m_Bits: 256
   ownCastle: {fileID: 0}
   targetCastle: {fileID: 0}
+  targetSoldier: {fileID: 0}
