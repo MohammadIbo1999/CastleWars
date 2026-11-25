@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class Castle : MonoBehaviour
@@ -7,6 +8,8 @@ public class Castle : MonoBehaviour
     public Country country;
     public TMP_Text countryLabel;
     public SpriteRenderer countryFlag;
+    public Slider healthBar;
+    public TMP_Text healthText;
 
     public int maxHealth = 10000;
     public int currentHealth;
@@ -14,6 +17,9 @@ public class Castle : MonoBehaviour
     void Start()
     {
         currentHealth = maxHealth;
+        healthBar.maxValue = maxHealth;
+
+        UpdateHealthUI();
     }
 
     public void SetCountry(Country newCountry)
@@ -27,10 +33,18 @@ public class Castle : MonoBehaviour
     {
         currentHealth = Mathf.Max(0, currentHealth - damage);
 
+        UpdateHealthUI();
+
         if (currentHealth == 0)
         {
             DestroyCastle();
         }
+    }
+
+    private void UpdateHealthUI()
+    {
+        healthBar.value = currentHealth;
+        healthText.text = currentHealth + " / " + maxHealth + " HP";
     }
 
     private void DestroyCastle()
