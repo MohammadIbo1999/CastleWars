@@ -23,6 +23,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   cameraFlashPrefab: {fileID: 6545487743322625327, guid: bd6e0c7aac1312f43ae6103e247205b2,
     type: 3}
-  specialCooldown: 30
+  specialCooldown: 2
+  carPrefab: {fileID: -3530239029469385686, guid: ac3c87061c29c9c43849c98222b08486,
+    type: 3}
   characterModel: {fileID: 0}
   characterIcon: {fileID: 0}
