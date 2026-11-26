@@ -58,7 +58,6 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    // Spielzeit anzeigen
     private void UpdateTimerUI()
     {
         int totalSeconds = Mathf.CeilToInt(remainingTime);
@@ -73,7 +72,6 @@ public class RoundManager : MonoBehaviour
             : Color.white;
     }
 
-    // Lebende Burgen überprüfen
     private void CheckWinner()
     {
         int aliveCastles = 0;
@@ -100,7 +98,6 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    // Gewinner bei Zeitablauf ermitteln
     private void CheckWinnerByHealth()
     {
         Castle winner = null;
@@ -138,18 +135,62 @@ public class RoundManager : MonoBehaviour
         spawnManager.autoSpawn = false;
         spawnManager.enabled = false;
 
+        // Soldaten und Spezialfähigkeiten stoppen
         Soldier[] soldiers = FindObjectsOfType<Soldier>();
 
         foreach (Soldier soldier in soldiers)
         {
             soldier.enabled = false;
+
+            SpecialAbility ability =
+                soldier.GetComponent<SpecialAbility>();
+
+            if (ability != null)
+            {
+                ability.enabled = false;
+            }
         }
+
+        ClearAttackObjects();
 
         ShowWinner(winner);
         UpdateRestartText();
     }
 
-    // Gewinner anzeigen
+    // Alle Angriffsobjekte entfernen
+    private void ClearAttackObjects()
+    {
+        // Bierflaschen
+        Projectile[] projectiles =
+            FindObjectsOfType<Projectile>();
+
+        foreach (Projectile projectile in projectiles)
+        {
+            projectile.gameObject.SetActive(false);
+            Destroy(projectile.gameObject);
+        }
+
+        // Kamerablitze
+        CameraFlash[] flashes =
+            FindObjectsOfType<CameraFlash>();
+
+        foreach (CameraFlash flash in flashes)
+        {
+            flash.gameObject.SetActive(false);
+            Destroy(flash.gameObject);
+        }
+
+        // Lamborghinis
+        CarAttack[] cars =
+            FindObjectsOfType<CarAttack>();
+
+        foreach (CarAttack car in cars)
+        {
+            car.gameObject.SetActive(false);
+            Destroy(car.gameObject);
+        }
+    }
+
     private void ShowWinner(Castle winner)
     {
         if (winner != null)
@@ -180,7 +221,6 @@ public class RoundManager : MonoBehaviour
         winnerPanel.SetActive(true);
     }
 
-    // Neustart-Countdown
     private void UpdateRestartTimer()
     {
         restartTimer = Mathf.Max(
@@ -200,9 +240,11 @@ public class RoundManager : MonoBehaviour
             Mathf.CeilToInt(restartTimer) + "s";
     }
 
-    // Neue Runde starten
     private void RestartRound()
     {
+        // Sicherheitshalber Angriffsobjekte entfernen
+        ClearAttackObjects();
+
         // Alte Soldaten entfernen
         Soldier[] soldiers = FindObjectsOfType<Soldier>();
 
@@ -221,14 +263,11 @@ public class RoundManager : MonoBehaviour
         // Neue Länder auswählen
         countryManager.AssignCountries();
 
-        // Gewinneranzeige ausblenden
         winnerPanel.SetActive(false);
 
-        // Rundenwerte zurücksetzen
         remainingTime = roundDuration;
         roundNumber++;
 
-        // Soldatenerzeugung aktivieren
         spawnManager.ResetSpawnTimer();
         spawnManager.autoSpawn = true;
         spawnManager.enabled = true;

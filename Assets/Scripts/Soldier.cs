@@ -3,20 +3,25 @@ using UnityEngine;
 
 public class Soldier : MonoBehaviour
 {
+    [Header("Character")]
+    public CharacterData characterData;
+
+    [Header("Combat Stats")]
     public int maxHealth = 100;
     public int currentHealth;
-
     public int attackDamage = 20;
+
     public float moveSpeed = 3f;
     public float attackRange = 1.5f;
     public float attackInterval = 1f;
     public float detectionRange = 5f;
 
-    // Soldatenabstand
+    [Header("Separation")]
     public float separationRadius = 0.8f;
     public float separationStrength = 3f;
     public LayerMask soldierLayer;
 
+    [Header("Targets")]
     public Castle ownCastle;
     public Castle targetCastle;
     public Soldier targetSoldier;
@@ -24,14 +29,39 @@ public class Soldier : MonoBehaviour
     private float nextAttackTime = 0f;
     private float nextSearchTime = 0f;
 
+    private SpecialAbility specialAbility;
+
     void Awake()
     {
+        specialAbility = GetComponent<SpecialAbility>();
+
+        InitializeCharacter();
+    }
+
+    // Charakterwerte übernehmen
+    public void InitializeCharacter()
+    {
+        if (characterData != null)
+        {
+            maxHealth = characterData.maxHealth;
+            attackDamage = characterData.attackDamage;
+            moveSpeed = characterData.moveSpeed;
+            attackRange = characterData.attackRange;
+            attackInterval = characterData.attackInterval;
+            detectionRange = characterData.detectionRange;
+        }
+
         currentHealth = maxHealth;
     }
 
     void Update()
     {
         if (ownCastle == null || currentHealth <= 0)
+            return;
+
+        // Während eines Spezialangriffs pausieren
+        if (specialAbility != null &&
+            specialAbility.IsUsingSpecial)
             return;
 
         if (Time.time >= nextSearchTime)
@@ -49,7 +79,8 @@ public class Soldier : MonoBehaviour
         {
             if (targetCastle == null ||
                 targetCastle == ownCastle ||
-                !targetCastle.gameObject.activeInHierarchy)
+                !targetCastle.gameObject.activeInHierarchy ||
+                targetCastle.currentHealth <= 0)
             {
                 FindTargetCastle();
             }
@@ -102,7 +133,8 @@ public class Soldier : MonoBehaviour
         foreach (Castle castle in castles)
         {
             if (castle == ownCastle ||
-                !castle.gameObject.activeInHierarchy)
+                !castle.gameObject.activeInHierarchy ||
+                castle.currentHealth <= 0)
                 continue;
 
             float distance = Vector3.Distance(
@@ -117,7 +149,7 @@ public class Soldier : MonoBehaviour
         }
     }
 
-    // Bewegung und Angriff
+    // Bewegen und angreifen
     private void MoveAndAttack(Transform target)
     {
         Vector3 targetPosition = target.position;
@@ -149,7 +181,7 @@ public class Soldier : MonoBehaviour
         }
     }
 
-    // Abstand zu anderen Soldaten halten
+    // Abstand zwischen Soldaten
     private void ApplySeparation()
     {
         Collider[] nearbySoldiers = Physics.OverlapSphere(
@@ -187,27 +219,131 @@ public class Soldier : MonoBehaviour
 
         separation = Vector3.ClampMagnitude(separation, 1f);
 
-        transform.position += separation *
-            separationStrength * Time.deltaTime;
+        transform.position +=
+            separation * separationStrength * Time.deltaTime;
     }
 
-    // Gegner angreifen
+    // Angriff ausführen
     private void Attack()
     {
         if (Time.time < nextAttackTime)
             return;
 
+        bool hasSoldierTarget =
+            targetSoldier != null &&
+            targetSoldier.currentHealth > 0;
+
+        bool hasCastleTarget =
+            targetCastle != null &&
+            targetCastle.currentHealth > 0 &&
+            targetCastle.gameObject.activeInHierarchy;
+
+        if (!hasSoldierTarget && !hasCastleTarget)
+            return;
+
+        // Kamerablitz
+        if (characterData != null &&
+            characterData.cameraFlashPrefab != null)
+        {
+            LaunchCameraFlash();
+        }
+        // Projektilangriff
+        else if (characterData != null &&
+                 characterData.projectilePrefab != null)
+        {
+            LaunchProjectile();
+        }
+        // Normaler Nahkampf
+        else
+        {
+            DealDirectDamage();
+        }
+
+        nextAttackTime = Time.time + attackInterval;
+    }
+
+    // Direkten Schaden verursachen
+    private void DealDirectDamage()
+    {
         if (targetSoldier != null &&
             targetSoldier.currentHealth > 0)
         {
             targetSoldier.TakeDamage(attackDamage);
         }
-        else if (targetCastle != null)
+        else if (targetCastle != null &&
+                 targetCastle.currentHealth > 0 &&
+                 targetCastle.gameObject.activeInHierarchy)
         {
             targetCastle.TakeDamage(attackDamage);
         }
+    }
 
-        nextAttackTime = Time.time + attackInterval;
+    // Bierflasche werfen
+    private void LaunchProjectile()
+    {
+        Vector3 spawnPosition =
+            transform.position + Vector3.up * 0.8f;
+
+        Projectile projectile = Instantiate(
+            characterData.projectilePrefab,
+            spawnPosition,
+            Quaternion.identity);
+
+        if (targetSoldier != null &&
+            targetSoldier.currentHealth > 0)
+        {
+            projectile.Initialize(
+                targetSoldier, null, attackDamage);
+        }
+        else
+        {
+            projectile.Initialize(
+                null, targetCastle, attackDamage);
+        }
+    }
+
+    // Kamerablitz auslösen
+    private void LaunchCameraFlash()
+    {
+        Transform target = null;
+
+        if (targetSoldier != null &&
+            targetSoldier.currentHealth > 0)
+        {
+            target = targetSoldier.transform;
+        }
+        else if (targetCastle != null &&
+                 targetCastle.currentHealth > 0 &&
+                 targetCastle.gameObject.activeInHierarchy)
+        {
+            target = targetCastle.transform;
+        }
+
+        if (target == null)
+            return;
+
+        Vector3 startPosition =
+            transform.position + Vector3.up * 0.8f;
+
+        Vector3 endPosition = target.position;
+
+        Collider targetCollider =
+            target.GetComponent<Collider>();
+
+        if (targetCollider != null)
+        {
+            endPosition = targetCollider.ClosestPoint(
+                startPosition);
+        }
+
+        CameraFlash flash = Instantiate(
+            characterData.cameraFlashPrefab,
+            startPosition,
+            Quaternion.identity);
+
+        flash.Initialize(startPosition, endPosition);
+
+        DealDirectDamage();
     }
 
     // Schaden erhalten

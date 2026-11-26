@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0705c5eab0efb94d89a5cb6fa73df99, type: 3}
+  m_Name: AlmanData
+  m_EditorClassIdentifier: 
+  characterType: 2
+  characterName: Alman
+  maxHealth: 150
+  attackDamage: 35
+  moveSpeed: 2
+  attackInterval: 1.5
+  attackRange: 8
+  detectionRange: 10
+  projectilePrefab: {fileID: 2694594256639714919, guid: 1f3b3702c70ce0d45b6d7adaa05816ae,
+    type: 3}
+  specialCooldown: 15
+  characterModel: {fileID: 0}
+  characterIcon: {fileID: 0}
